@@ -5,8 +5,8 @@ package utils;
  * @author: Kailai Chen
  * @create: 2019-10-16 00:35
  **/
-// Multithread version:
 
+// Multithread version:
 // 1. since the most time consuming part is the getUrls(url) function,
 // we can use a Master/slave approach to parallel processing the getUrls(url),
 // 2. The benefit of also making the read write of result set parallel
@@ -23,6 +23,7 @@ public class CrawlerManager {
     private final int THREAD_COUNT = 10;
     private final int PAUSE_TIME = 1000;
 
+    // 因为hashset每个元素的组成还是链表，单纯的用hashset可能会造成链表循环
     private Set<String> result = new CopyOnWriteArraySet<>();
     private List<Future<List<String>>> futures = new CopyOnWriteArrayList<>();
     private ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
