@@ -15,6 +15,8 @@ package utils;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /*
     http://scrumbucket.org/tutorials/neo4j-site-crawler/part-2-create-multi-threaded-crawl-manager/
@@ -26,18 +28,34 @@ public class CrawlerManager {
     // 因为hashset每个元素的组成还是链表，单纯的用hashset可能会造成链表循环
     private Set<String> result = new CopyOnWriteArraySet<>();
     private List<Future<List<String>>> futures = new CopyOnWriteArrayList<>();
-    private ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+//    private ExecutorService executor = Executors.newFixedThreadPool()
 
+    /**
+     * 线程池的大小按照经验的估算：
+     *  - 如果是CPU密集型应用，则线程池大小设置为N+1
+     *  - 如果是IO密集型应用，则线程池大小设置为2N+1
+     * 在IO优化中，这样的估算公式可能更适合：
+     *  最佳线程数目 = （（线程等待时间+线程CPU时间）/线程CPU时间 ）* CPU数目
+     *  因为明显，线程等待时间所占比例越高，需要越多线程。CPU所占时间越高需要越少线程。
+     */
+    /**
+     * 阿里开发手册强制使用 ThreadPoolExecutor，用newFixedThreadPool有一定风险
+     * 因为其内部的LinkedBlockingQueue默认使用Integer.MAX_VALUE，有oom的风险
+     * also，some link will be rejected when the pool is full
+     */
+    private ExecutorService executor = Executors.newFixedThreadPool(4);
+//    private ExecutorService executor =
     private static Map<String, List<String>> connectedUrls;
-
-
 
     public List<String> crawl(String url) {
         submitUrl(url);
         while(checkCrawlerResult());
         executor.shutdown();
         return new ArrayList<>(result);
+
     }
+
+    // 这个方法有一个问题就是我们的max_thread_num 和 LinkedBlockingQueue 可能会无法容纳这么多的link
 
     private boolean checkCrawlerResult() {
         List<String> newUrls = new ArrayList<>();

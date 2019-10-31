@@ -59,7 +59,7 @@ public class StreamDownloadTest {
             // 包装成高效流
             BufferedInputStream bis = new BufferedInputStream(is);
 
-            // 写入本地 D 盘
+            // 写入桌面
             File file = new File("/Users/Claus/Desktop/牛逼.jpg");
             BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
 
@@ -68,10 +68,8 @@ public class StreamDownloadTest {
             while ((len = bis.read(bytes)) != -1) {
                 bos.write(bytes, 0, len);
             }
-
             bos.close();
             bis.close();
-
         } catch (ClientProtocolException e) {
             System.err.println("Http协议出现问题");
             e.printStackTrace();
